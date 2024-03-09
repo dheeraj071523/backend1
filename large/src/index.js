@@ -4,7 +4,15 @@ import coonectDB from "./db/index.js";
 import dotenv from "dotenv";
 dotenv.config({ path: "./env" });
 
-coonectDB();
+coonectDB()
+  .then(() => {
+    app.listen(process.env.PORT || 3000, () => {
+      console.log(`server listing on the ${process.env.PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.log("MONGODB connection failed !!!", error);
+  });
 
 // import express from "express";
 
