@@ -32,14 +32,14 @@ cloudinary.config({
 // };
 
 const uploadOnCloudinary = async (localFilePath) => {
-  console.log(localFilePath);
   try {
     if (!localFilePath) return null;
     // Upload the file on Cloudinary
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
     });
-    console.log("File uploaded successfully", response.url);
+    console.log(response);
+    fs.unlinkSync(localFilePath);
     return response;
   } catch (error) {
     // If there's an error during upload or unlinking the file, handle it here
@@ -47,7 +47,7 @@ const uploadOnCloudinary = async (localFilePath) => {
     if (localFilePath) {
       // Attempt to unlink the file
       try {
-        fs.unlinkSync(localFilePath);
+        fs.unlinkSync(localFilePath); // isko  yahi remove karne ke liyee sync asyc se background me move hoti rahti hai
       } catch (unlinkError) {
         console.error("Error unlinking file:", unlinkError);
       }

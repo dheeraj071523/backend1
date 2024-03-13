@@ -20,12 +20,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const { fullname, email, username, password } = req.body;
   // desctruing of the data here we take the data postman or req to particular object each value data
-  console.log(
-    "req.body:",
-    req.body.password,
-    req.body.email,
-    req.body.fullname
-  );
 
   // if (fullname === "") {
   //   throw new ApiError(400, "fullname is required")
@@ -36,6 +30,8 @@ const registerUser = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(400, "All fields are required");
   }
+
+  console.log(req.body);
 
   const existedUser = await User.findOne({
     $or: [{ username }, { email }],
@@ -48,17 +44,26 @@ const registerUser = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.files?.avatar[0]?.path; // req.files this access give the multer // ? this is called optionaly // [0] give the object  // here wwe access the file
   //  here the file storage in the local storage
 
-  const coverImageLocalPath = req.files?.coverImage[0]?.path; // here we take the coverImage file access
+  // const coverImageLocalPath = req.files?.coverImage[0]?.path; // here we take the coverImage file access
+
+  let coverImageLocalPath;
+
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+  }
+
+  console.log(req.files);
 
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar file is required");
   }
-  console.log(avatarLocalPath, coverImageLocalPath);
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
-  console.log(avatar, coverImage);
 
   if (!avatar) {
     throw new ApiError(400, "Avatar file is required");
@@ -74,7 +79,7 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   const createdUser = await User.findById(user._id).select(
-    "-password -refresh Token"
+    "-password -refreshToken"
   ); // see the user is actully created or not this _id give the  mongoDB
 
   if (!createdUser) {
