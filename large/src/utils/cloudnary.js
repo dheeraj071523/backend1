@@ -1,24 +1,57 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs"; // full form of the file system by default install in node js you can see  the docs
 
+import EventEmitter from "events";
+
+// Increase the maximum number of listeners for EventEmitter prototype
+EventEmitter.defaultMaxListeners = 15;
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// const uploadOnCloudinary = async (localFilePath) => {
+//   console.log(localFilePath);
+//   try {
+//     if (!localFilePath) return null;
+//     //upload the file on cloudinary
+
+//     const response = await cloudinary.uploader.upload(localFilePath, {
+//       resource_type: "auto", //detect which file is coming like pdf jpg etc
+//     });
+
+//     //file has been uploaded succesfully
+//     console.log("file is uploaded succesfully", response.url);
+//     return response;
+//   } catch (error) {
+//     fs.unlinkSync(localFilePath); // remove the locally saveed temporary file as the upload operation get failed
+//     return null;
+//   }
+// };
+
 const uploadOnCloudinary = async (localFilePath) => {
+  console.log(localFilePath);
   try {
     if (!localFilePath) return null;
-    //upload the file on cloudinary
+    // Upload the file on Cloudinary
     const response = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: "auto", //detect which file is coming like pdf jpg etc
+      resource_type: "auto",
     });
-    //file has been uploaded succesfully
-    console.log("file is uploaded succesfully", response.url);
+    console.log("File uploaded successfully", response.url);
     return response;
   } catch (error) {
-    fs.unlinkSync(localFilePath); // remove the locally saveed temporary file as the upload operation get failed
+    // If there's an error during upload or unlinking the file, handle it here
+    console.error("Error uploading file to Cloudinary:", error);
+    if (localFilePath) {
+      // Attempt to unlink the file
+      try {
+        fs.unlinkSync(localFilePath);
+      } catch (unlinkError) {
+        console.error("Error unlinking file:", unlinkError);
+      }
+    }
     return null;
   }
 };
