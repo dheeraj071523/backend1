@@ -252,4 +252,119 @@ const refrehAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-export { registerUser, loginUser, loggoutUser, refrehAccessToken };
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body; // yaha par password change kar rahe  hai agar user logged in hai to ye to fronted se milga req.bode me value
+  const user = await User.findById(req.user?._id); // middleware se req.user milga auth
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword); // old Password matching in this above function is this is correct or not
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invaild old pasword");
+  }
+
+  user.password = newPassword; // yaha par pre function use ho raha hai (video 17 timestamp : 17:20)
+
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "password changed successfully"));
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  return res
+    .status(200)
+    .json(200, req.user, "current user fetched successfully ");
+});
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullname, email } = req.body;
+
+  if (!fullname || !email) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const user = User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        fullname,
+        email: email,
+      },
+    },
+    { new: true } // updated  data saved hoga
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Acoount details updated successfully"));
+});
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path; // yaha par file isliye liya hai kyuki routing me middleware me ek hi field le rahe hai jabki register route mai fileds liya the and files liya the kyuki register mai avatar and coverimage do le rahe the
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatr file is missing");
+  }
+
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+  if (!avatar.url) {
+    throw new ApiError(400, "Error while uploading on avatar");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "avatar is updating successfully"));
+});
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const coverImageLocalPath = req.file?.path; // yaha par file isliye liya hai kyuki routing me middleware me ek hi field le rahe hai jabki register route mai fileds liya the and files liya the kyuki register mai avatar and coverimage do le rahe the
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "coverImage file is missing");
+  }
+
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+
+  if (!coverImage.url) {
+    throw new ApiError(400, "Error while uploading on coverImage");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: coverImage.url,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "coverImage is updating successfully"));
+});
+
+export {
+  registerUser,
+  loginUser,
+  loggoutUser,
+  refrehAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage,
+};
